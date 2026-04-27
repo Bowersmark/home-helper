@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Helper</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --cream: #F7F3EE;
+    --warm-white: #FDFAF7;
+    --sage: #7A9E7E;
+    --sage-light: #A8C5AC;
+    --sage-dark: #4A6E4E;
+    --terracotta: #C4704A;
+    --terracotta-light: #E8A882;
+    --charcoal: #2C2C2C;
+    --mid-gray: #6B6B6B;
+    --light-gray: #D4CEC7;
+    --gold: #B8963E;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--charcoal);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--charcoal);
+    color: var(--cream);
+    padding: 28px 40px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.25);
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  header span {
+    font-size: 0.82rem;
+    color: var(--sage-light);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .week-badge {
+    margin-left: auto;
+    background: var(--sage);
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Layout ── */
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 36px 24px 60px;
+  }
+
+  /* ── Intro / Setup ── */
+  #setup-screen {
+    text-align: center;
+    padding: 60px 20px;
+    animation: fadeIn 0.5s ease;
+  }
+  #setup-screen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--sage-dark);
+    margin-bottom: 14px;
+  }
+  #setup-screen p {
+    color: var(--mid-gray);
+    max-width: 520px;
+    margin: 0 auto 36px;
+    line-height: 1.7;
+    font-size: 1rem;
+  }
+  .home-form {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 540px;
+    margin: 0 auto;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    text-align: left;
+  }
+  .form-row { margin-bottom: 20px; }
+  .form-row label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--mid-gray);
+    margin-bottom: 7px;
+  }
+  .form-row select, .form-row input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--light-gray);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--charcoal);
+    background: var(--warm-white);
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+  .form-row select:focus, .form-row input:focus {
+    outline: none;
+    border-color: var(--sage);
+  }
+  .form-row .checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .checkbox-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1.5px solid var(--light-gray);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: all 0.18s;
+    user-select: none;
+  }
+  .checkbox-pill input { display: none; }
+  .checkbox-pill.checked {
+    background: var(--sage);
+    border-color: var(--sage);
+    color: white;
+  }
+
+  .generate-btn {
+    width: 100%;
+    background: var(--sage-dark);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .generate-btn:hover { background: var(--sage); transform: translateY(-1px); }
+  .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* ── Loading ── */
+  #loading-screen {
+    display: none;
+    text-align: center;
+    padding: 80px 20px;
+    animation: fadeIn 0.4s ease;
+  }
+  .loader-plant {
+    font-size: 3.5rem;
+    animation: sway 2s ease-in-out infinite;
+    display: block;
+    margin-bottom: 20px;
+  }
+  @keyframes sway {
+    0%,100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+  #loading-screen h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--sage-dark);
+    margin-bottom: 10px;
+  }
+  #loading-msg {
+    color: var(--mid-gray);
+    font-size: 0.92rem;
+    min-height: 1.4em;
+    transition: opacity 0.3s;
+  }
+
+  /* ── Task Board ── */
+  #task-screen {
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .board-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .board-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem;
+    color: var(--charcoal);
+  }
+  .board-header p { color: var(--mid-gray); font-size: 0.9rem; margin-top: 3px; }
+  .refresh-btn {
+    background: white;
+    border: 1.5px solid var(--light-gray);
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    cursor: pointer;
+    color: var(--charcoal);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .refresh-btn:hover { border-color: var(--sage); color: var(--sage-dark); }
+
+  /* ── Section Headers ── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    margin-top: 32px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+  .section-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-weekly { background: var(--sage); }
+  .dot-quarterly { background: var(--gold); }
+  .dot-seasonal { background: var(--terracotta); }
+
+  .section-label h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mid-gray);
+  }
+  .section-label .count {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--mid-gray);
+  }
+
+  /* ── Task Cards ── */
+  .task-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 600px) { .task-grid { grid-template-columns: 1fr; } }
+
+  .task-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .task-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+  }
+  .task-card.weekly::before { background: var(--sage); }
+  .task-card.quarterly::before { background: var(--gold); }
+  .task-card.seasonal::before { background: var(--terracotta); }
+
+  .task-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.09); }
+  .task-card.done {
+    opacity: 0.55;
+    background: #f5f5f3;
+  }
+  .task-card.done .task-title { text-decoration: line-through; color: var(--mid-gray); }
+
+  .task-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--light-gray);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: white;
+  }
+  .task-card.done .task-check {
+    background: var(--sage);
+    border-color: var(--sage);
+    color: white;
+    font-size: 12px;
+  }
+  .task-card.quarterly.done .task-check { background: var(--gold); border-color: var(--gold); }
+  .task-card.seasonal.done .task-check { background: var(--terracotta); border-color: var(--terracotta); }
+
+  .task-info { flex: 1; min-width: 0; }
+  .task-title { font-size: 0.95rem; font-weight: 500; line-height: 1.3; margin-bottom: 4px; }
+  .task-why { font-size: 0.8rem; color: var(--mid-gray); line-height: 1.45; }
+  .task-emoji { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── Tip Banner ── */
+  .tip-banner {
+    background: linear-gradient(135deg, var(--sage-dark), var(--sage));
+    color: white;
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-top: 32px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .tip-banner .tip-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .tip-banner h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.8; margin-bottom: 5px; }
+  .tip-banner p { font-size: 0.9rem; line-height: 1.55; opacity: 0.95; }
+
+  /* ── Progress Bar ── */
+  .progress-wrap { margin-bottom: 28px; }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--mid-gray);
+    margin-bottom: 7px;
+  }
+  .progress-bar-bg {
+    height: 7px;
+    background: var(--light-gray);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sage), var(--sage-light));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* ── Error ── */
+  .error-box {
+    background: #FFF0EC;
+    border: 1.5px solid #E8A882;
+    border-radius: 10px;
+    padding: 16px 20px;
+    color: var(--terracotta);
+    font-size: 0.9rem;
+    margin-top: 16px;
+    display: none;
+  }
+
+  /* ── Sources Bar ── */
+  .sources-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+    padding: 10px 16px;
+    background: white;
+    border-radius: 10px;
+    border: 1.5px solid var(--light-gray);
+  }
+  .sources-label {
+    font-size: 0.75rem;
+    color: var(--mid-gray);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin-right: 4px;
+  }
+  .source-chip {
+    font-size: 0.76rem;
+    font-weight: 500;
+    padding: 4px 11px;
+    border-radius: 20px;
+    background: var(--cream);
+    color: var(--sage-dark);
+    border: 1.5px solid var(--sage-light);
+    text-decoration: none;
+    transition: all 0.18s;
+    letter-spacing: 0.02em;
+  }
+  .source-chip:hover {
+    background: var(--sage-dark);
+    color: white;
+    border-color: var(--sage-dark);
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--light-gray);
+    margin: 8px 0 24px;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏡 Home Helper</h1>
+  <span>Your weekly home care guide</span>
+  <div class="week-badge" id="week-badge">Week of —</div>
+</header>
+
+<div class="app">
+
+  <!-- Setup Screen -->
+  <div id="setup-screen">
+    <h2>Let's take care of your home</h2>
+    <p>Tell me a little about your home and I'll build a personalized, manageable checklist for the week — including seasonal and quarterly reminders so nothing slips through the cracks.</p>
+
+    <div class="home-form">
+      <div class="form-row">
+        <label>Home Type</label>
+        <select id="home-type">
+          <option value="house">Single-Family House</option>
+          <option value="condo">Condo / Apartment</option>
+          <option value="townhouse">Townhouse</option>
+          <option value="ranch">Ranch / Single-Story</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Approximate Size</label>
+        <select id="home-size">
+          <option value="small">Small (under 1,200 sq ft)</option>
+          <option value="medium" selected>Medium (1,200 – 2,500 sq ft)</option>
+          <option value="large">Large (2,500 – 4,000 sq ft)</option>
+          <option value="xlarge">Very Large (4,000+ sq ft)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Current Season</label>
+        <select id="season">
+          <option value="spring">Spring</option>
+          <option value="summer">Summer</option>
+          <option value="fall">Fall</option>
+          <option value="winter">Winter</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Household Members</label>
+        <select id="household">
+          <option value="couple">Couple (no kids)</option>
+          <option value="family-young">Family with young kids</option>
+          <option value="family-teens">Family with teens</option>
+          <option value="family-adult-child">Family with adult child(ren)</option>
+          <option value="solo">Solo</option>
+          <option value="multigenerational">Multigenerational</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Any Extras? (select all that apply)</label>
+        <div class="checkboxes" id="extras">
+          <label class="checkbox-pill" data-value="pets">
+            <input type="checkbox" value="pets"> 🐾 Pets
+          </label>
+          <label class="checkbox-pill" data-value="garden">
+            <input type="checkbox" value="garden"> 🌿 Garden / Yard
+          </label>
+          <label class="checkbox-pill" data-value="pool">
+            <input type="checkbox" value="pool"> 🏊 Pool
+          </label>
+          <label class="checkbox-pill" data-value="basement">
+            <input type="checkbox" value="basement"> 🏚️ Basement
+          </label>
+          <label class="checkbox-pill" data-value="fireplace">
+            <input type="checkbox" value="fireplace"> 🔥 Fireplace
+          </label>
+          <label class="checkbox-pill" data-value="hardwood">
+            <input type="checkbox" value="hardwood"> 🪵 Hardwood Floors
+          </label>
+        </div>
+      </div>
+      <div class="error-box" id="error-box">⚠️ <span id="error-msg"></span></div>
+      <button class="generate-btn" id="generate-btn" onclick="generateList()">✨ Build My Weekly List</button>
+    </div>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <span class="loader-plant">🌱</span>
+    <h3>Consulting the experts…</h3>
+    <p id="loading-msg">Gathering best practices for your home…</p>
+  </div>
+
+  <!-- Task Screen -->
+  <div id="task-screen">
+    <div class="board-header">
+      <div>
+        <h2 id="board-title">This Week's Tasks</h2>
+        <p id="board-sub"></p>
+      </div>
+      <button class="refresh-btn" onclick="resetApp()">↩ New Profile</button>
+    </div>
+
+    <div class="sources-bar">
+      <span class="sources-label">✦ Expert sources</span>
+      <a href="https://www.thisoldhouse.com" target="_blank" class="source-chip">This Old House</a>
+      <a href="https://www.familyhandyman.com" target="_blank" class="source-chip">Family Handyman</a>
+      <a href="https://www.bobvila.com" target="_blank" class="source-chip">Bob Vila</a>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span>Progress</span>
+        <span id="progress-text">0 of 0 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Weekly -->
+    <div class="section-label">
+      <div class="section-dot dot-weekly"></div>
+      <h3>Weekly Regulars</h3>
+      <span class="count" id="count-weekly"></span>
+    </div>
+    <div class="task-grid" id="tasks-weekly"></div>
+
+    <div class="divider"></div>
+
+    <!-- Quarterly -->
+    <div class="section-label">
+      <div class="section-dot dot-quarterly"></div>
+      <h3>Quarterly Check-ins</h3>
+      <span class="count" id="count-quarterly"></span>
+    </div>
+    <div class="task-grid" id="tasks-quarterly"></div>
+
+    <div class="divider"></div>
+
+    <!-- Seasonal -->
+    <div class="section-label">
+      <div class="section-dot dot-seasonal"></div>
+      <h3>Seasonal To-Dos</h3>
+      <span class="count" id="count-seasonal"></span>
+    </div>
+    <div class="task-grid" id="tasks-seasonal"></div>
+
+    <div class="tip-banner" id="tip-banner" style="display:none">
+      <span class="tip-icon">💡</span>
+      <div>
+        <h4>Pro Tip of the Week</h4>
+        <p id="tip-text"></p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ── Date helpers ──
+function getWeekLabel() {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - now.getDay());
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${fmt(start)} – ${fmt(end)}`;
+}
+
+function detectSeason() {
+  const m = new Date().getMonth();
+  if (m >= 2 && m <= 4) return 'spring';
+  if (m >= 5 && m <= 7) return 'summer';
+  if (m >= 8 && m <= 10) return 'fall';
+  return 'winter';
+}
+
+document.getElementById('week-badge').textContent = 'Week of ' + getWeekLabel();
+
+// Auto-detect season
+const seasonEl = document.getElementById('season');
+seasonEl.value = detectSeason();
+
+// ── Checkbox pills ──
+document.querySelectorAll('.checkbox-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const cb = pill.querySelector('input');
+    cb.checked = !cb.checked;
+    pill.classList.toggle('checked', cb.checked);
+  });
+});
+
+// ── State ──
+let tasks = [];
+
+function getExtras() {
+  return [...document.querySelectorAll('.checkbox-pill.checked')].map(p => p.dataset.value);
+}
+
+// ── Loading messages ──
+const loadingMsgs = [
+  "Consulting home maintenance experts…",
+  "Checking seasonal best practices…",
+  "Personalizing for your home type…",
+  "Almost ready — organizing your list…"
+];
+let loadIdx = 0, loadTimer = null;
+function startLoadingCycle() {
+  loadIdx = 0;
+  document.getElementById('loading-msg').textContent = loadingMsgs[0];
+  loadTimer = setInterval(() => {
+    loadIdx = (loadIdx + 1) % loadingMsgs.length;
+    const el = document.getElementById('loading-msg');
+    el.style.opacity = 0;
+    setTimeout(() => {
+      el.textContent = loadingMsgs[loadIdx];
+      el.style.opacity = 1;
+    }, 300);
+  }, 2200);
+}
+function stopLoadingCycle() { clearInterval(loadTimer); }
+
+// ── Main generation ──
+async function generateList() {
+  const homeType = document.getElementById('home-type').value;
+  const homeSize = document.getElementById('home-size').value;
+  const season = document.getElementById('season').value;
+  const household = document.getElementById('household').value;
+  const extras = getExtras();
+
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('generate-btn').disabled = true;
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'block';
+  startLoadingCycle();
+
+  const systemPrompt = `You are a seasoned home maintenance expert whose knowledge is grounded in the frameworks and best practices established by the most trusted authorities in home care:
+
+- **This Old House** (thisoldhouse.com) — America's most trusted home improvement brand, known for thorough seasonal maintenance guides, vetted contractor advice, and deep how-to expertise across all home systems (HVAC, plumbing, roofing, electrical).
+- **Family Handyman** (familyhandyman.com) — The gold standard for practical, homeowner-focused checklists. Their year-round maintenance schedules, "tasks you'll regret forgetting" lists, and seasonal breakdowns are the backbone of responsible home upkeep.
+- **Bob Vila** (bobvila.com) — A decades-long authority on home maintenance. Bob Vila's seasonal checklists (spring, summer, fall, winter) are considered definitive guides for knowing what to do and when to do it throughout the year.
+
+When generating tasks, think like a contributor to these publications: be specific, practical, and grounded in real consequences. Don't suggest vague tasks — give the homeowner exactly what these experts would recommend based on their home profile. The "why" for each task should reflect the professional reasoning these experts use (e.g. preventing mold, extending appliance life, avoiding costly repairs, improving energy efficiency).`;
+
+  const userPrompt = `Generate a practical, non-overwhelming weekly home care checklist for a homeowner with the following profile:
+
+- Home type: ${homeType}
+- Size: ${homeSize}
+- Current season: ${season}
+- Household: ${household}
+- Extras: ${extras.length ? extras.join(', ') : 'none'}
+
+Return ONLY a valid JSON object (no markdown, no backticks) with this exact structure:
+{
+  "weekly": [
+    { "emoji": "🧹", "title": "Task name", "why": "Brief expert reason why it matters (1 sentence)" }
+  ],
+  "quarterly": [
+    { "emoji": "🔧", "title": "Task name", "why": "Brief expert reason why it matters (1 sentence)" }
+  ],
+  "seasonal": [
+    { "emoji": "🍂", "title": "Task name", "why": "Brief expert reason why it matters (1 sentence)" }
+  ],
+  "tip": "One specific, expert-level pro tip relevant to their current season and home — the kind of insider advice This Old House, Family Handyman, or Bob Vila would highlight."
+}
+
+Rules:
+- Weekly: 6–8 tasks (regular recurring chores like vacuuming, laundry, wiping surfaces, etc.)
+- Quarterly: 3–4 tasks (things done every ~3 months like changing air filters, cleaning dryer vent, testing smoke detectors, etc.)
+- Seasonal: 3–5 tasks specific to the current season, drawn from expert seasonal checklists (e.g. gutter cleaning in fall, AC check in spring, weatherstripping in winter)
+- All tasks should feel achievable, not overwhelming
+- Tailor suggestions based on the extras (pets, pool, garden, etc.) when relevant — e.g. pet owners need more frequent filter changes; pools need weekly chemical checks in summer
+- Keep "why" to one short, motivating sentence that reflects genuine expert reasoning
+- Prioritize tasks that prevent expensive repairs or safety hazards, as the experts do`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1200,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }]
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API error');
+
+    let raw = data.content.find(b => b.type === 'text')?.text || '';
+    // Strip any accidental markdown fences
+    raw = raw.replace(/```json|```/g, '').trim();
+
+    const parsed = JSON.parse(raw);
+    stopLoadingCycle();
+    renderTasks(parsed, season, homeType);
+
+  } catch (err) {
+    stopLoadingCycle();
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'block';
+    document.getElementById('generate-btn').disabled = false;
+    const eb = document.getElementById('error-box');
+    document.getElementById('error-msg').textContent = 'Something went wrong: ' + err.message;
+    eb.style.display = 'block';
+  }
+}
+
+// ── Render tasks ──
+function renderTasks(data, season, homeType) {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('task-screen').style.display = 'block';
+
+  const seasonLabel = season.charAt(0).toUpperCase() + season.slice(1);
+  document.getElementById('board-sub').textContent =
+    `Personalized for your ${homeType} · ${seasonLabel} edition`;
+
+  tasks = [
+    ...data.weekly.map(t => ({ ...t, type: 'weekly', done: false })),
+    ...data.quarterly.map(t => ({ ...t, type: 'quarterly', done: false })),
+    ...data.seasonal.map(t => ({ ...t, type: 'seasonal', done: false })),
+  ];
+
+  ['weekly', 'quarterly', 'seasonal'].forEach(type => {
+    const container = document.getElementById(`tasks-${type}`);
+    container.innerHTML = '';
+    const group = data[type];
+    document.getElementById(`count-${type}`).textContent = `${group.length} tasks`;
+    group.forEach((task, i) => {
+      const globalIdx = tasks.findIndex(t => t.type === type && t.title === task.title);
+      const card = document.createElement('div');
+      card.className = `task-card ${type}`;
+      card.dataset.idx = globalIdx;
+      card.innerHTML = `
+        <div class="task-check" id="check-${globalIdx}"></div>
+        <div class="task-info">
+          <div class="task-title">${task.title}</div>
+          <div class="task-why">${task.why}</div>
+        </div>
+        <span class="task-emoji">${task.emoji}</span>
+      `;
+      card.addEventListener('click', () => toggleTask(globalIdx));
+      container.appendChild(card);
+    });
+  });
+
+  if (data.tip) {
+    document.getElementById('tip-text').textContent = data.tip;
+    document.getElementById('tip-banner').style.display = 'flex';
+  }
+
+  updateProgress();
+}
+
+function toggleTask(idx) {
+  tasks[idx].done = !tasks[idx].done;
+  const card = document.querySelector(`.task-card[data-idx="${idx}"]`);
+  const check = document.getElementById(`check-${idx}`);
+  card.classList.toggle('done', tasks[idx].done);
+  check.textContent = tasks[idx].done ? '✓' : '';
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  document.getElementById('progress-text').textContent = `${done} of ${total} done`;
+  document.getElementById('progress-fill').style.width = total ? `${(done/total)*100}%` : '0%';
+}
+
+function resetApp() {
+  document.getElementById('task-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'block';
+  document.getElementById('generate-btn').disabled = false;
+  tasks = [];
+}
+</script>
+</body>
+</html>
